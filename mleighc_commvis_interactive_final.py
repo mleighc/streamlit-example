@@ -348,7 +348,8 @@ c3=alt.Chart(chicken_soups).mark_circle().encode(
 ### Display blog sections###
 ############################
 
-section_options = ['Learning Objectives','The Data','The Design Process', 'Inspiration', 'Evaluation',
+
+section_options = ['Chicken (Noodle) Soup','Learning Objectives','The Data','The Design Process', 'Inspiration', 'Evaluation',
                     'Nutrient Facts Distributions', 'Dairy Content and Nutrition', 'Flu-Fighting Nutrients',
                     'Recipes By Serving Size']
 
@@ -356,7 +357,13 @@ with st.sidebar:
     chart_options_select = st.selectbox(label='Select a section to view: ',
                     options=section_options)
 
-if chart_options_select == 'Learning Objectives':
+if chart_options_select == 'Chicken (Noodle) Soup':
+    st.title('SI649 Individual Project Communicative Visualization Project')
+    st.subheader('Chicken Soup Visualization Blog')
+    st.write('Miranda Cooper (mleighc)')
+    st.write('Select a section in the left sidebar to view the blog and visualizations!')
+
+elif chart_options_select == 'Learning Objectives':
     st.title('Learning Objectives')
     st.write('The viewer will be able to:')
     '''
@@ -467,7 +474,7 @@ elif chart_options_select == 'Evaluation':
     '''
 
 elif chart_options_select == 'Dairy Content and Nutrition':
-    st.title('How does dairy content impact the amount of Protein and Calcium in a chicken soup recipe?')
+    st.title('How does dairy content impact the amount of protein and calcium in a chicken soup recipe?')
     chart2
     '#### Interaction Notes: '
     '''
