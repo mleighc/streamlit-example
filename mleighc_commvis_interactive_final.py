@@ -3,7 +3,7 @@ import altair as alt
 import pandas as pd
 from vega_datasets import data
 
-##DEPLOYED: 
+##DEPLOYED:
 #This app is deployed at the following link: https://mleighc-streamlit-exam-mleighc-commvis-interactive-final-8n48c7.streamlit.app/
 
 #enable theme
