@@ -234,7 +234,7 @@ chart4=alt.Chart(chicken_soups).mark_circle(size=80,opacity=0.5).encode(
 #     y=y_axis_select
 # )
 
-#dairy drop-down example
+######dairy drop-down example
 cy_options=list(open_food_soups["hasDairy"].unique())
 
 widget=alt.binding_select(options=cy_options,name='Items with Dairy?: ')
@@ -259,7 +259,7 @@ c5=alt.Chart(open_food_soups).mark_point().encode(
 
 source = data.cars()
 
-##brush example!
+######brush example!
 brush = alt.selection(type='interval')
 
 points = alt.Chart(source).mark_point().encode(
@@ -277,6 +277,72 @@ bars = alt.Chart(source).mark_bar().encode(
 ).transform_filter(
     brush
 )
+
+#####iteration of connected interval charts
+brush = alt.selection(type='interval', encodings=['x'])
+
+# Define the base chart, with the common parts of the
+# background and highlights
+base = alt.Chart().mark_bar(color='lightgreen').encode(
+    x=alt.X(alt.repeat('column'), type='quantitative', bin=alt.Bin(maxbins=20)),
+    y='count()'
+).properties(
+    width=190,
+    height=160
+)
+
+# gray background with selection
+background = base.encode(
+    color=alt.value('#ddd')
+).add_selection(brush)
+
+# blue highlights on the transformed data
+highlight = base.transform_filter(brush)
+
+# layer the two charts & repeat
+chart_3=alt.layer(
+    background,
+    highlight,
+    data=chicken_soups
+).repeat(column=["fat_per_serving", "calories_per_serving", "vit_D_per_serving"])
+
+#######3x charts example
+cy_options=list(chicken_soups["servings"].unique())
+cy_options=list(map(lambda x:int(x),cy_options))
+cy_options.sort()
+
+widget=alt.binding_select(options=cy_options,name='Select Serving Size: ')
+selectServing=alt.selection_single(fields=['servings'],init={'servings':cy_options[1]},bind=widget)
+colorCondition = alt.condition(selectServing,alt.Color('servings:N'),alt.value('orange'))
+
+c1=alt.Chart(chicken_soups).mark_point().encode(
+    y=alt.Y("fat_per_serving:Q", axis=alt.Axis(title='Fat Per Serving')),
+    x=alt.X("dairyFree:N", axis=alt.Axis(title='Dairy Free')),
+    tooltip=['Title', 'fat_per_serving', 'calories_per_serving', 'healthScore', 'veryPopular', 'servings', 'dairyFree']
+).add_selection(
+        selectServing,
+    ).encode(
+        color=colorCondition
+    ).transform_filter(selectServing)
+
+c2=alt.Chart(chicken_soups).mark_point().encode(
+    y=alt.Y("fat_per_serving:Q", axis=alt.Axis(title='Fat Per Serving')),
+    x=alt.X("veryPopular:N", axis=alt.Axis(title='Very Popular')),
+).add_selection(
+        selectServing,
+    ).encode(
+        color=colorCondition,
+        tooltip=['Title', 'fat_per_serving', 'calories_per_serving', 'healthScore', 'veryPopular', 'servings', 'dairyFree']
+    ).transform_filter(selectServing)
+
+c3=alt.Chart(chicken_soups).mark_circle().encode(
+    y=alt.Y("fat_per_serving:Q", axis=alt.Axis(title='Fat Per Serving')),
+    x=alt.X("calories_per_serving:Q", axis=alt.Axis(title='Calories Per Serving')),
+    color=colorCondition,
+    tooltip=['Title', 'fat_per_serving', 'calories_per_serving', 'healthScore', 'veryPopular', 'servings', 'dairyFree']
+).add_selection(
+    selectServing
+).transform_filter(selectServing)
 
 ############################
 ### Display blog sections###
@@ -299,6 +365,36 @@ if chart_options_select == 'Learning Objectives':
     - Summarize the variety of flu-fighting nutrients in various chicken soup recipes. (interactive & static)
     - Evaluate various soup recipes based on their popularity, presence of dairy and allergens, and nutrition (interactive)
     '''
+    '''With some of the limitations of the data that I had initially parsed for the static visualization, I realized early on that
+    the very first Learning Objective related to ingredients would not be applicable to the interactive visualization as a result 
+    of these limitations. I also found this Learning Objective to be the least interesting of the initial two that I had written.
+    For this reason, I chose to write a new Learning Objective that related to additional attributes that I was able to unearth
+    from my initial nutrient dataset, as well as an additional dataset parsed from the Open Food Facts website.'''
+
+    '''The first chart, relating to the distributions of nutrient facts, is an iteration on a static visualization that
+    I created for the first round of this project. This chart gives the viewer a sense of the distribution of certain
+    nutritional facts throughout the set of recipes. Viewers can get a high-level comparison of where all of the recipes
+    fall within this distribution and understand, for example, that a majority of the recipes are less than 20 g of
+    fat and a majority of the recipes are less than 400 calories. But, if they are interested in a specific range, they also
+    have the ability to adjust the interval and see how the distribution adjust along with it'''
+
+    '''The second chart allows the viewer to see how protein and calcium related to a recipe's dairy and allergen content. 
+    They also have the ability to adjust the interval to see the double-encoded distributions of dairy and allergens.
+    If the viewer has a particular dietary restriction, this may help them to find the best recipe for them, perhaps with the highest
+    protein content.'''
+
+    '''The third visualization is a new iteration on the static visualization that gives viewers an overview of various
+    flu-fighting nutrients in the chicken soup recipes. It provides the viewer some additional options of hovering over
+    any one point, highlighting that point, viewing a tooltop of details, and then also seeing where that particular
+    recipe falls in the other three scatter plots. It has also been double-encoded with Health Score to reinforce
+    the ability for the viewer to truly be able to summarize the presence of these various nutrients and interpolate
+    how they may impact the healthiness of a particular soup'''
+
+    '''The final chart leverages a few more data points that might be interesting to a viewer looking for a new 
+    soup recipe to try. They can filter to only the recipes at a particular serving size, compare their Fat and Calorie
+    content, and then select whether they'd like a popular recipe or whether that does not particularly matter to them. 
+    They are still able to compare the nutrional value of various recipes, but have the added decision-making factors
+    that allow them to select a subset of recipes based on crowd-sourced popularity data and portion sizing.'''
 
 elif chart_options_select == 'The Design Process':
     '''
@@ -315,9 +411,11 @@ elif chart_options_select == 'The Design Process':
     to the viewer in terms of added expressiveness.
     '''
     '''
-    In some stages of the design process, 
+    In some stages of the design process, I started with just a few charts in order to ensure the interaction would work
+    well with the data, such as the example below. Once I was happy with the idea behind the interaction, I could then add
+    additional data using the repeat function.
     '''
-
+    chart_3
 
 elif chart_options_select == 'The Data':
     '''The 300+ recipes and their respective nutrition and ingredient details have been accessed from [Spoonacular's API](https://spoonacular.com/food-api).
@@ -336,12 +434,18 @@ elif chart_options_select == 'The Data':
     Howeever, the data required a lot more clean up and so ultimately only made it into one of the final visualizations I selected.'''
 
 elif chart_options_select == 'Inspiration':
-    ''''Much of my inspiration for the interactive stage of the project came from reading through the documentation for altair. Since I am still quite
-    new to Altair, I felt limited in terms of creating in altair whatever visualizations I might have imagined in my mind. For this reason, I started reading
-    through the documentation and example code for various types of interactions in the Altair documentation. I began by recreating them for myself in
-    order to understand how the code worked. For example, one of my visualizations is very much inspired by the example below because I felt it translated well
+    ''''Much of my inspiration for the interactive stage of the project came from reading through the documentation for Altair. Since I am still quite
+    new to Altair, I felt limited in terms of creating in altair whatever visual interactions I might have imagined in my mind. For this reason, I started reading
+    through the documentation and example code for various types of inspiration and tutorials. I began by recreating the documentation examples for myself in
+    order to understand how the code would work with combinations of interactions. For example, one of my visualizations is very much inspired by the example below because I felt it translated well
     into giving the viewer some insight into the distribution of recipes both with/without dairy and with/without allergens.'''
     points & bars
+
+    '''In addition to reviewing the Altair documentation, I also took inspiration from previous labs in order to gain practice. While I did not
+    intend to use all of the visual interactions that I recreated, I referred to these notes as I was ideating on the possible interactions to employ.
+    For example, this visualization below looks very close to one of the lab examples, however I deemed the final version as lacking in effectiveness,
+    since I had limitations on the types of categorical data that could prove interesting in this particular visualization.'''
+    st.write((c1|c2|c3).resolve_scale(y="shared"))
 
 elif chart_options_select == 'Nutrient Facts Distributions':
     st.title('What is the nutritional distribution of various chicken soup recipes?')
@@ -351,14 +455,25 @@ elif chart_options_select == 'Nutrient Facts Distributions':
     * Select an interval in any one of the bar charts to highlight the adjusted distribution for that particular interval in all of the charts.
     '''
 
+elif chart_options_select == 'Evaluation':
+    '''In order to evaluate the effectiveness of each of my visualizations, I would ask viewers the following set of questions:
+    '''
+    '''
+    - For chart 1, What is the approximate count of recipes with Fat (g) between 5 and 10? What does the distribution look like for those same soups in terms of Calories? Are they generally high or low in calories?
+    - For chart 2, What soup has the highest amount of calcium? Is it also high in Protein? What's its name? Does it have dairy?
+    - For chart 2, What is the distribution of dairy content for recipes with less than 5g of Protein and less than 20 mg of Calcium?
+    - For chart 3, Which recipe has the highest amount of Zinc? What other flu-fighting nutrients is that soup also high in? What nutrients is it missing (if any)?
+    - For chart 4, Can you find for me the names of two (2) soups with a serving size of two (2) where fat and calories are the least and the highest, but both are not popular soups?
+    '''
+
 elif chart_options_select == 'Dairy Content and Nutrition':
     st.title('How does dairy content impact the amount of Protein and Calcium in a chicken soup recipe?')
     chart2
     '#### Interaction Notes: '
     '''
-    * Hovering over each recipe (data point) will change the color and size of that particular recipe in the target chart, as well as, align this same interaction in the 3 other charts.
-    * The tooltip provides additional details for each recipe: Title and Amount of each plotted nutritional element.
-    * Each point's color is encoded to indicate that recipe's Health Score as defined by Spoonacular. Health Score is on a 0 to 100 point scale.
+    * Brush over the data points to select an interval of data and the target data points will remain in color, while the rest will fade to grey.
+    * As the interval is selected in the scatterplot, the bar chart will filter to only those data points
+    * The color of the bar plot is double encoded to show the count of recipes that also contain allergies.
     '''
 
 elif chart_options_select == 'Flu-Fighting Nutrients':
@@ -366,9 +481,9 @@ elif chart_options_select == 'Flu-Fighting Nutrients':
     chart3
     '#### Interaction Notes: '
     '''
-    * Brush over the data points to select an interval of data and the target data points will remain in color, while the rest will fade to grey.
-    * As the interval is selected in the scatterplot, the bar chart will filter to only those data points
-    * The color of the bar plot is double encoded to show the count of recipes that also contain allergies.
+    * Hovering over each recipe (data point) will change the color and size of that particular recipe in the target chart, as well as, align this same interaction in the 3 other charts.
+    * The tooltip provides additional details for each recipe: Title and Amount of each plotted nutritional element.
+    * Each point's color is encoded to indicate that recipe's Health Score as defined by Spoonacular. Health Score is on a 0 to 100 point scale.
     '''
 
 elif chart_options_select == 'Recipes By Serving Size':
